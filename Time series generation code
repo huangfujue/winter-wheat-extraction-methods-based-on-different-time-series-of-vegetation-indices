@@ -1,0 +1,96 @@
+ //https://code.earthengine.google.com/c4b4d403930f1f4571e2a29ea17e22c6
+ 
+ var bianjie = 
+    /* color: #0b4a8b */
+    /* shown: false */
+    ee.Geometry.Polygon(
+        [[[102.680402, 36.518203],
+          [103.178299, 36.137819],
+          [102.852278, 35.711079],
+          [102.354381, 36.091462]]]),
+    shaobing2 = ee.ImageCollection("COPERNICUS/S2_SR"),
+    minhe = ee.FeatureCollection("users/103b6051/minhe_2019_shnag_chuan");
+ 
+ Map.centerObject(bianjie)
+ 
+function ndpi(image){  var nd = image.expression('(nir-(0.74*r+(1-0.74)*swir))/(nir+(0.74*r+(1-0.74)*swir))',
+                                                      {'nir':image.select("B8"),
+                                                      'r':image.select("B4"),
+                                                      'swir':image.select("B11")     })
+                      return image.addBands(ee.Image(nd).rename("ndpi"))
+                                      }
+function ndvi(image){  var nd = image.expression('(nir-r)/(nir+r)',
+                                                      {'nir':image.select("B8"),
+                                                      'r':image.select("B4")
+                                                        })
+                      return image.addBands(ee.Image(nd).rename("ndvi"))
+                                      }                                      
+function ndgi(image){  var nd = image.expression('(0.65*g+0.35*nir-r)/(0.65*g+0.35*nir+r)',
+                                                      {'nir':image.select("B8"),
+                                                      'r':image.select("B4"),
+                                                      'g':image.select("B3")
+                                                        })
+                      return image.addBands(ee.Image(nd).rename("ndgi"))
+                                      }                                        
+
+//数据集 
+function dateAddDays(dateStr,dayCount) {
+    var tempDate=new Date(dateStr.replace(/-/g,"/"));//把日期字符串转换成日期格式
+    var resultDate=new Date((tempDate/1000+(86400*dayCount))*1000);//增加n天后的日期
+    var resultDateStr=resultDate.getFullYear()+"-"+(resultDate.getMonth()+1)+"-"+(resultDate.getDate());//将日期转化为字符串格式
+    return resultDateStr;
+}
+var date=[]
+var time_start='2019-08-25'  //SG滤波会剔除边缘数据，因此需额外多四期，前后各两期
+var time_end
+for(var i=0;i<34;i++){
+  time_end=dateAddDays(time_start,20)
+  date.push([time_start,time_end])
+  time_start=time_end }
+  print('日期',date)
+
+var sCol= shaobing2.filterBounds(bianjie)                              
+function pinjie(date1,date2){
+  var temp=sCol.filterDate(date1, date2)
+  var nd=temp.map(ndpi).map(ndvi).map(ndgi) 
+  return ee.Image(nd.qualityMosaic('ndvi')).copyProperties(temp.first())
+}
+var images=[]
+for(var i=0;i<date.length;i++){
+var image= pinjie(date[i][0],date[i][1])
+images.push(image)
+}
+print(images)  
+Map.addLayer(ee.Image(images[5]))
+images=ee.ImageCollection(images)
+var ndvi_images=images.select("ndvi").toList(41)
+var ndpi_images=images.select("ndpi").toList(41)
+var ndgi_images=images.select("ndgi").toList(41)
+print(ndvi_images,"ndvis")
+print(ndpi_images,"ndpis")
+print(ndgi_images,"ndgis")
+var ndvi_image=[]
+var ndpi_image=[]
+var ndgi_image=[]
+for(var i=0;i<34;i++){
+  ndvi_image.push(ndvi_images.get(i))
+  ndpi_image.push(ndpi_images.get(i))
+  ndgi_image.push(ndgi_images.get(i))
+}
+
+
+var daochu1=ee.Image(ndvi_image)
+Export.image.toAsset({image:daochu1,description:"ndvi_20190826_20200730_34" ,region:minhe, assetId:"ndvi_20190826_20200730_34", 
+region:bianjie, scale:10,maxPixels:1e13
+})
+var daochu2=ee.Image(ndpi_image)
+Export.image.toAsset({image:daochu2,description:"ndpi_20190826_20200730_34" ,region:minhe,  assetId:"ndpi_20190826_20200730_34", 
+region:bianjie, scale:10,maxPixels:1e13
+})
+
+var daochu3=ee.Image(ndgi_image)
+Export.image.toAsset({image:daochu3,description:"ndgi_20190826_20200730_34" ,region:minhe,  assetId:"ndgi_20190826_20200730_34", 
+region:bianjie, scale:10,maxPixels:1e13
+})
+
+
