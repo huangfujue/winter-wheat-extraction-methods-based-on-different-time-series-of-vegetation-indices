@@ -1,0 +1,241 @@
+//https://code.earthengine.google.com/3d72c3aaa2f0e28598b8c7a2f7d2fcc3
+//paper  The implementation uses the Matable code, which works the same way and shows the result of the generated mixed curve  
+
+
+var dxmyb = 
+    /* color: #0f63d6 */
+    /* shown: false */
+    /* locked: true */
+    ee.Geometry.MultiPoint(
+        [[102.83219906824714, 36.34012101463979],
+         [102.83290717142707, 36.3385135446446],
+         [102.8314677544477, 36.33938115783136],
+         [102.82904303749824, 36.33893175668971],
+         [102.82569564064765, 36.33860334652329],
+         [102.82503045281196, 36.338050231534105],
+         [102.82251990517402, 36.33917374224204],
+         [102.82219804009223, 36.34008982359397],
+         [102.82054579933906, 36.339450296238404],
+         [102.82786286553169, 36.34110959959515],
+         [102.821533941533, 36.33791838094775],
+         [102.8492913896506, 36.31909747047938],
+         [102.84712416476657, 36.31906289225229],
+         [102.84879786319186, 36.31800324326394],
+         [102.85027844256808, 36.31847005438154],
+         [102.86738941094913, 35.880641351796115],
+         [102.86573180577793, 35.88057615480141],
+         [102.86693879983463, 35.88134547591948],
+         [102.86649755616034, 35.88251361858432],
+         [102.86271538131324, 35.882644009330505],
+         [102.86286558501807, 35.882131137823855],
+         [102.86226477019873, 35.8822354509417],
+         [102.85970808806465, 35.883060548131475],
+         [102.85884978117988, 35.88267807001224],
+         [102.86453779482429, 35.86537270270519],
+         [102.86326439189267, 35.864594531785514],
+         [102.86365543474528, 35.88586180491155],
+         [102.86650498314101, 35.880778947917406],
+         [102.86326708428186, 35.88265454607161],
+         [102.86740064921608, 35.88131821928421]]),
+    qtyb = /* color: #d63000 */ee.Geometry.MultiPoint(
+        [[102.82258829903147, 36.331163381042636],
+         [102.83705077003977, 36.332027697895526],
+         [102.83353171181223, 36.31854326307998],
+         [102.85666308235666, 36.31186933359186],
+         [102.86395869087717, 36.3122151470824],
+         [102.83830948289592, 35.86103465690324],
+         [102.86856480058391, 35.86169548025573],
+         [102.86619986320653, 35.853099071979436],
+         [102.84459029800273, 35.88152691096103],
+         [102.87460656878272, 35.88693187069512]]),
+    sg_ndgi = ee.Image("users/103b6051/SG_VI/sg_ndgi_20190915_20200710_30"),
+    sg_ndpi = ee.Image("users/103b6051/SG_VI/sg_ndpi_20190915_20200710_30"),
+    sg_ndvi = ee.Image("users/103b6051/SG_VI/sg_ndvi_20190915_20200710_30");
+
+
+
+var zuhe=ee.List([[0,1],	[0,2],	[0,3],	[0,4],	[0,5],	[0,6],	[0,7],	[0,8],	[0,9],	[1,2],	[1,3],	[1,4],	[1,5],	[1,6],	[1,7],	[1,8],	[1,9],	[2,3],	[2,4],	[2,5],	[2,6],	[2,7],	[2,8],	[2,9],	[3,4],	[3,5],	[3,6],	[3,7],	[3,8],	[3,9],	[4,5],	[4,6],	[4,7],	[4,8],	[4,9],	[5,6],	[5,7],	[5,8],	[5,9],	[6,7],	[6,8],	[6,9],	[7,8],	[7,9],	[8,9],])
+var d=get_ck_image_list(sg_ndvi,"sg_ndvi",dxmyb,30)
+var q=get_ck_image_list(sg_ndvi,"sg_ndvi",qtyb,10)
+var NDGI_zhongzhi=ee.List([0.0888416386708845,	0.066987342521469,	0.0323328876470118,	0.1657992748829389,	0.158115276571485,	0.257761741692691,	0.263967166711432,	0.28281769839853,	0.292535351452929,	0.332622255923233,	0.166971112736426,	0.0819138682626225,	0.0443852957330629,	0.0288194341491143,	0.0143144457132596,	0.0151489326834659,	0.0374989879522562,	0.0568547715685862,	0.113531474132947,	0.232433177427978,	0.224941285326947,	0.262639211152639,	0.461756329361845,	0.575613432195869,	0.561259619541297,	0.554525441244444,	0.664041482129316,	0.42341232872762,	0.27524879916629,	0.115929682458649])
+zuhe=zuhe.map(function(item){ return (ee.List(item).map(function(i){return q.get(i)}))})
+var yangxing=[]
+ var yinxing=[]
+ 
+ //5 代表生成的曲线数 ,简单生成5条套，展示三套
+for(var i=0;i<5;i++){
+  var suiji=(Math.random()*0.5)+0.5;
+  yangxing.push(get_f12(suiji))
+  yinxing.push(get_f12(1.0-suiji))
+}
+ yangxing=ee.List(yangxing)
+ yinxing=ee.List(yinxing)
+// // print(yangxing)
+// // print(yinxing)
+var yang_xing_yang_ben=zuhe.map(function(item){  var q1=ee.List(item).get(0);
+                          var q2=ee.List(item).get(1);
+                        return  yangxing.map(function(qz){return get_quxian(NDGI_zhongzhi,q1,q2,qz)  })
+                          
+                      } )
+var yin_xing_yang_ben=zuhe.map(function(item){ 
+                              var q1=ee.List(item).get(0);
+                              var q2=ee.List(item).get(1);
+                              return  yinxing.map(function(qz){return get_quxian( NDGI_zhongzhi,q1,q2,qz)  })
+                      } )
+ var nihe= yin_xing_yang_ben.map(function (zuhe){return ee.List(zuhe).map(function(qx){ return min_PT_DTW(qx) })})
+
+
+print_chart()
+
+function min_PT_DTW(qx){
+  qx=ee.List(qx)
+  var temp=[]
+  for(var i=0;i<30;i++){
+    temp.push(PT_DTW_value(ee.List(d.get(i)),qx))
+  }
+  return ee.Number(ee.List(temp).reduce(ee.Reducer.min()))
+}
+
+function get_quxian(ck,qt1,qt2,qz){
+  ck=ee.List(ck)
+  qt1=ee.List(qt1)
+  qt2=ee.List(qt2)
+  qz=ee.List(qz)
+  var a=ee.Number(qz.get(0))
+  var b=ee.Number(qz.get(1))
+  var c=ee.Number(qz.get(2))
+  var temp=[]
+  for(var i=0;i<30;i++){
+    temp.push((ee.Number(ck.get(i)).multiply(a)).add((ee.Number(qt1.get(i)).multiply(b))).add((ee.Number(qt2.get(i)).multiply(c))))
+  }
+  return ee.List(temp)
+}
+function get_f12(randmo){
+  var a=1.0-randmo
+  var c=0.5
+  var f1=c*a
+  var f2=(1.0-c)*a
+  var temp=[]
+  temp.push(ee.Number(randmo))
+  temp.push(ee.Number(f1))
+  temp.push(ee.Number(f2))
+  return ee.List(temp)
+}
+
+function get_ck_image_list(sg_image,name,ck,number){
+  //返回参考曲线列表影像
+  var temp=[]
+  temp.push(ee.ImageCollection(sg_image.select(name)).getRegion(ck,10).slice(1, number+1).map(function(item){return ee.List(item).get(4)}))
+  
+  for(var i=1;i<30;i++){
+ temp.push(ee.ImageCollection(sg_image.select(name+"_"+i.toString())).getRegion(ck,10).slice(1, number+1).map(function(item){return ee.List(item).get(4)}))
+  }
+  var list=[]
+  for(var i=0;i<number;i++)
+  {
+    var t=[]
+    for(var j=0;j<30;j++)
+    {
+      t.push(ee.Number(ee.List(ee.List(temp).get(j)).get(i))) 
+    }
+    list.push(t)
+  }
+  return ee.List(list)
+}
+function cheng_fa_quan_zhong(i,j){
+  ///返回时间惩罚
+  var zhishu=-0.1*(10*Math.abs(i-j)-100)
+  var quanzhong=1.0/(1.0+Math.exp(zhishu))
+  return ee.Number(quanzhong)
+  
+}
+function PT_DTW_value(list1,list2){
+var  jvzhen=[]
+var h=30 
+var l=30
+  for(var i=0;i<h;i++)
+  {
+    var line=[]
+    var a=ee.Number(list1.get(i))
+    for(var j=0;j<l;j++)
+    {
+      var b=ee.Number(list2.get(j))
+      var chengfa=cheng_fa_quan_zhong(i,j)
+      line.push((a.subtract(b)).abs().add(chengfa))
+    }
+    jvzhen.push(line)
+  }
+
+  return min_search_sum(jvzhen)
+}
+function min_search_sum(jvzhen){
+  var images=[]
+  images.push(ee.Number(jvzhen[0][0]))
+  for(var i=0;i<29;i++){
+    var wu_hou=wu_hou_jia_quan(i)
+    var a=ee.Number(jvzhen[i+1][i+1]).multiply(wu_hou)
+    var b=ee.Number(jvzhen[i+1][i]).multiply(wu_hou)
+    var c=ee.Number(jvzhen[i][i+1]).multiply(wu_hou)
+    var min=ee.Number(a.min(b)).min(c)
+    images.push(min)
+  }
+  return ee.List(images).reduce(ee.Reducer.sum())
+}
+
+function wu_hou_jia_quan(i){
+ //计算权重
+  var quanzhong=0.0;
+  var qita=0.0;
+  switch(i){
+  case 2:
+  case 3:
+  case 4:
+  case 5:
+  case 26:
+  case 27:
+  case 28:
+  case 29: quanzhong=(1.0-qita)/8.0;break;
+  default : quanzhong=qita;
+  }
+
+  return ee.Number(quanzhong)
+}
+
+function print_chart(){
+for(var i=0;i<3;i++){//展示前3条
+var a=ui.Chart.array.values(ee.List(ee.List(yang_xing_yang_ben.get(i)).get(1)), 0)  
+                .setSeriesNames(["阳性样本曲线"])  
+                .setOptions({  
+                  title: "曲线"+(i+1).toString(),   
+                  hAxis: {title: "time"},  
+                  vAxis: {title: "value"},    
+                  lineWidth:1,  
+                  pointSize:2  
+                });  
+print(a)
+var b=ui.Chart.array.values(ee.List(ee.List(yin_xing_yang_ben.get(i)).get(1)), 0)  
+                .setSeriesNames(["阴性样本曲线"])  
+                .setOptions({  
+                  title: "曲线"+(i+1).toString(),   
+                  hAxis: {title: "time"},  
+                  vAxis: {title: "value"},   
+                  lineWidth:1,  
+                  pointSize:2  
+                });  
+print(b)
+}
+
+
+var c=ui.Chart.array.values(NDGI_zhongzhi, 0)  
+                .setSeriesNames(["中值参考曲线"])  
+                .setOptions({  
+                  title: "曲线",   
+                  hAxis: {title: "time"},  
+                  vAxis: {title: "value"},  
+                  lineWidth:1,  
+                  pointSize:2  
+                });  
+print(c)
+}
+
+
