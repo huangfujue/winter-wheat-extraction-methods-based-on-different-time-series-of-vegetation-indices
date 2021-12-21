@@ -1,0 +1,174 @@
+//https://code.earthengine.google.com/5d3eb964668ac057a7ed94af27c3217a
+
+
+var geng_di = ee.Image("users/huangfujue/geng_di/minheGD1"),
+    sg_ndgi = ee.Image("users/103b6051/SG_VI/sg_ndgi_20190915_20200710_30"),
+    sg_ndpi = ee.Image("users/103b6051/SG_VI/sg_ndpi_20190915_20200710_30"),
+    sg_ndvi = ee.Image("users/103b6051/SG_VI/sg_ndvi_20190915_20200710_30"),
+    minhe = ee.FeatureCollection("users/103b6051/minhe_2019_shnag_chuan"),
+    xiaomai_2 = 
+    /* color: #0f63d6 */
+    /* locked: true */
+    ee.Geometry.MultiPoint(
+        [[102.83219906824714, 36.34012101463979],
+         [102.83290717142707, 36.3385135446446],
+         [102.8314677544477, 36.33938115783136],
+         [102.82904303749824, 36.33893175668971],
+         [102.82569564064765, 36.33860334652329],
+         [102.82503045281196, 36.338050231534105],
+         [102.82251990517402, 36.33917374224204],
+         [102.82219804009223, 36.34008982359397],
+         [102.82054579933906, 36.339450296238404],
+         [102.82786286553169, 36.34110959959515],
+         [102.821533941533, 36.33791838094775],
+         [102.8492913896506, 36.31909747047938],
+         [102.84712416476657, 36.31906289225229],
+         [102.84879786319186, 36.31800324326394],
+         [102.85027844256808, 36.31847005438154],
+         [102.86738941094913, 35.880641351796115],
+         [102.86573180577793, 35.88057615480141],
+         [102.86693879983463, 35.88134547591948],
+         [102.86649755616034, 35.88251361858432],
+         [102.86271538131324, 35.882644009330505],
+         [102.86286558501807, 35.882131137823855],
+         [102.86226477019873, 35.8822354509417],
+         [102.85970808806465, 35.883060548131475],
+         [102.85884978117988, 35.88267807001224],
+         [102.86453779482429, 35.86537270270519],
+         [102.86326439189267, 35.864594531785514],
+         [102.86365543474528, 35.88586180491155],
+         [102.86650498314101, 35.880778947917406],
+         [102.86326708428186, 35.88265454607161],
+         [102.86740064921608, 35.88131821928421]]);
+var ndvis= get_sglist(sg_ndvi,"sg_ndvi")
+var ndpis= get_sglist(sg_ndpi,"sg_ndpi") 
+var ndgis= get_sglist(sg_ndgi,"sg_ndgi")
+daochu()
+
+
+
+function daochu(){
+  var riqi="20211025";       //文件生产日期 
+  var wuhouqi="4-8_27-30";  //物候期
+var temp=[]
+var ck_10=get_ck_image_list(sg_ndvi,"sg_ndvi",xiaomai_2)
+for (var i=0;i<30;i++){
+    temp.push(DTW_image_list(ndvis,ee.List(ck_10.get(i))))
+}
+
+var dtw=ee.ImageCollection(temp).min()
+Export.image.toAsset({image:dtw,description:"ndvi_dtw_"+wuhouqi+"_"+riqi, assetId:"ndvi_dtw_"+wuhouqi+"_"+riqi,  region:minhe, scale:10, maxPixels:1e13})
+Map.addLayer(dtw.clip(minhe),{min:0,max:0.2,palette: ['#1fc413','#13e023','#e3ff8d','#fcff4d','#ff5c1d']},"ndvi")
+temp=[]
+ck_10=get_ck_image_list(sg_ndpi,"sg_ndpi",xiaomai_2)
+for (var i=0;i<30;i++){
+    temp.push(DTW_image_list(ndpis,ee.List(ck_10.get(i))))
+}
+dtw=ee.ImageCollection(temp).min()
+Export.image.toAsset({image:dtw,description:"ndpi_dtw_"+wuhouqi+"_"+riqi, assetId:"ndpi_dtw_"+wuhouqi+"_"+riqi,  region:minhe, scale:10, maxPixels:1e13})
+Map.addLayer(dtw.clip(minhe),{min:0,max:0.2,palette: ['#1fc413','#13e023','#e3ff8d','#fcff4d','#ff5c1d']},"ndpi")
+
+temp=[]
+ck_10=get_ck_image_list(sg_ndgi,"sg_ndgi",xiaomai_2)
+for (var i=0;i<30;i++){
+    temp.push(DTW_image_list(ndgis,ee.List(ck_10.get(i))))
+}
+
+dtw=ee.ImageCollection(temp).min()
+Export.image.toAsset({image:dtw,description:"ndgi_dtw_"+wuhouqi+"_"+riqi, assetId:"ndgi_dtw_"+wuhouqi+"_"+riqi,  region:minhe, scale:10, maxPixels:1e13})
+
+  Map.addLayer(dtw.clip(minhe),{min:0,max:0.2,palette: ['#1fc413','#13e023','#e3ff8d','#fcff4d','#ff5c1d']},"ndgi")
+
+ Map.centerObject(minhe,12)
+  
+  
+}
+function get_ck_image_list(sg_image,name,ck){
+  //返回参考曲线列表影像
+  var temp=[]
+  sg_image=ee.ImageCollection(sg_image)
+  temp.push(ee.ImageCollection(sg_image.select(name)).getRegion(ck,10).slice(1, 31).map(function(item){return ee.List(item).get(4)}))
+  
+  for(var i=1;i<30;i++){
+ temp.push(ee.ImageCollection(sg_image.select(name+"_"+i.toString())).getRegion(ck,10).slice(1, 31).map(function(item){return ee.List(item).get(4)}))
+  }
+  var list=[]
+  for(var i=0;i<30;i++)
+  {
+    var t=[]
+    for(var j=0;j<30;j++)
+    {
+      t.push(ee.Image(ee.Number(ee.List(ee.List(temp).get(j)).get(i)))) 
+    }
+    list.push(t)
+  }
+  return ee.List(list)
+}
+function get_sglist(sg_image,name){
+  //返回SG列表
+  var temp=[]
+  temp.push(sg_image.select(name))
+  for(var i=1;i<30;i++){
+    temp.push(sg_image.select(name+"_"+i.toString()))
+  }
+  return ee.List(temp)
+}             
+function cheng_fa_quan_zhong(i,j){
+  ///返回时间惩罚
+  var zhishu=-0.1*(10*Math.abs(i-j)-100)
+  var quanzhong=1.0/(1.0+Math.exp(zhishu))
+  return ee.Image(quanzhong)
+  
+}
+function DTW_image_list(list1,list2){
+  //计算两个列表影像的PT-DTW值
+var  jvzhen=[]
+var h=30 //列表行列数
+var l=30
+  for(var i=0;i<h;i++)
+  {
+    var line=[]
+    var a=ee.Image(list1.get(i))
+    for(var j=0;j<l;j++)
+    {
+      var b=ee.Image(list2.get(j))
+      var chengfa=cheng_fa_quan_zhong(i,j)
+      line.push(a.subtract(b).abs().add(chengfa).set("i_j",i+"_"+j))
+    }
+    jvzhen.push(line)
+  }
+
+  return ee.Image(min_search_sum(jvzhen))
+}
+function min_search_sum(jvzhen){
+  //返回DTW值
+  var images=[]
+  images.push(ee.Image(jvzhen[0][0]).rename("min_DTW"))
+  for(var i=0;i<29;i++){
+    var wu_hou=wu_hou_jia_quan(i+1)
+    var a=ee.Image(jvzhen[i+1][i+1]).multiply(wu_hou)
+    var b=ee.Image(jvzhen[i+1][i]).multiply(wu_hou)
+    var c=ee.Image(jvzhen[i][i+1]).multiply(wu_hou)
+    var min=a.min(b).min(c).rename("min_DTW")
+    images.push(min)
+  }
+  return ee.ImageCollection(images).sum()
+}
+function wu_hou_jia_quan(i){
+ //计算权重
+  var quanzhong=0.0;
+  var qita=0.0;
+  switch(i){
+  case 2:
+  case 3:
+  case 4:
+  case 5:
+  case 26:
+  case 27:
+  case 28:
+  case 29: quanzhong=(1.0-qita)/8.0;break;
+  default : quanzhong=qita;
+  }
+
+  return ee.Image(quanzhong)
+}
