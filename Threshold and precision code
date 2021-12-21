@@ -1,0 +1,201 @@
+//https://code.earthengine.google.com/d51e95b077bfaaf9343f33f3820a7158
+
+var geng_di = ee.Image("users/huangfujue/geng_di/minheGD1"),
+    ndgi36 = ee.Image("users/103b6051/PT-DTW_20201025/ndgi_dtw_3-6_27-30_20211025"),
+    ndpi36 = ee.Image("users/103b6051/PT-DTW_20201025/ndpi_dtw_3-6_27-30_20211025"),
+    ndvi36 = ee.Image("users/103b6051/PT-DTW_20201025/ndvi_dtw_3-6_27-30_20211025"),
+    dxmyb = 
+    /* color: #0fd63e */
+    /* shown: false */
+    /* locked: true */
+    ee.Geometry.MultiPoint(
+        [[102.84992585229986, 36.318597091146],
+         [102.84681448984259, 36.31923678968698],
+         [102.84892403015107, 36.31855178796377],
+         [102.85386811816514, 36.32414189972904],
+         [102.83134831210596, 36.33999818076413],
+         [102.83033287791963, 36.33885767387566],
+         [102.83239281444307, 36.338062572439796],
+         [102.82951579944047, 36.34228170928033],
+         [102.82742367640886, 36.34199652332387],
+         [102.81749966643973, 36.34039149306948],
+         [102.86585030101342, 35.88072301324451],
+         [102.86605855749497, 35.88259988730212],
+         [102.86233154303412, 35.88262328557826],
+         [102.86357608801703, 35.881075967811704],
+         [102.86386812663079, 35.88585875984061],
+         [102.84836039819444, 35.857084255771866],
+         [102.86442239234351, 35.86548096176111],
+         [102.8219369779327, 36.33926220884185],
+         [102.82590406020562, 36.33777124145686],
+         [102.82565729697625, 36.336526713912555],
+         [102.82230664618172, 36.337881669965036],
+         [102.81939376719154, 36.33784398126509],
+         [102.85836395799365, 35.87200979464774],
+         [102.86545060339846, 35.8758049076021],
+         [102.85913176444554, 35.8829831835409],
+         [102.86763658545755, 35.880725464932056],
+         [102.86722888968728, 35.88178599405002],
+         [102.8626812119315, 35.88465212092401],
+         [102.81294114365157, 35.86476348968444],
+         [102.81380481495437, 35.86478087902514]]),
+    qtyb = /* color: #d63000 */ee.Geometry.MultiPoint(
+        [[102.8687295177451, 35.885010140567054],
+         [102.86237170442688, 35.892026971116145],
+         [102.83799578889953, 35.890288616169265],
+         [102.84263064607727, 35.891123031306904],
+         [102.85559108003723, 35.87784087986395],
+         [102.85318782075989, 35.88263940100297],
+         [102.84992625459778, 35.88430838369178],
+         [102.85207202180969, 35.87624130821893],
+         [102.86917251433806, 35.8815474604351],
+         [102.86487025107817, 35.87768775005298],
+         [102.87166160430388, 35.88003489364148],
+         [102.87367862548308, 35.881912558437044],
+         [102.87327092971282, 35.88556344589292],
+         [102.84740465681017, 35.86326587931444],
+         [102.85397070447863, 35.857979242976015],
+         [102.8427818907027, 36.31772323574511],
+         [102.84000312216327, 36.31880381666325],
+         [102.84167682058856, 36.31988438260112],
+         [102.84823427365251, 36.322589482814145],
+         [102.83696776390025, 36.32863987145014],
+         [102.84954195976206, 36.329193053257235],
+         [102.85357600212046, 36.32628880495517],
+         [102.85297518730113, 36.324490882712496],
+         [102.83460741996714, 36.33157860481093],
+         [102.82370692253062, 36.33095629405619],
+         [102.83859385818539, 36.33521085665596],
+         [102.8404307818421, 36.33316064688666],
+         [102.82275498862995, 36.33605531448595],
+         [102.8219181394173, 36.33702328793011],
+         [102.8269606923653, 36.34009998078015]]),
+    minhe = ee.FeatureCollection("users/103b6051/minhe_2019_shnag_chuan");
+
+Map.centerObject(minhe,12)
+var tezheng="36"     //输入  36 48  510  查看结果
+
+var ndvi
+var ndgi   
+var ndpi
+
+var ds=0   //冬小麦样本
+var qs=0   // 其他样本
+var mjs=0  //面积
+
+var T_value
+
+switch(tezheng){
+  case "36":
+    print("36")
+     ndvi=ndvi36.clip(minhe)
+     ndgi=ndgi36.clip(minhe)
+     ndpi=ndpi36.clip(minhe)
+     addDTWImage()
+      T_value=0.053
+      get_jingdu(ndgi,T_value,dxmyb,"ndgi")
+      print("NDGI",ds,"冬小麦",qs,"其他",mjs,"面积(万亩)")
+      T_value=0.050
+      get_jingdu(ndpi,T_value,dxmyb,"ndpi")
+      print("NDPI",ds,"冬小麦",qs,"其他",mjs,"面积(万亩)")
+      T_value=0.060
+      get_jingdu(ndvi,T_value,dxmyb,"ndvi")
+      print("NDVI",ds,"冬小麦",qs,"其他",mjs,"面积(万亩)")
+     
+    break;
+  case "48":
+    print("48")
+     ndvi=ndvi48.clip(minhe)
+     ndgi=ndgi48.clip(minhe)
+     ndpi=ndpi48.clip(minhe)
+     addDTWImage()
+      T_value=0.062
+      get_jingdu(ndgi,T_value,dxmyb,"ndgi")
+      print("NDGI",ds,"冬小麦",qs,"其他",mjs,"面积(万亩)")
+      T_value=0.055
+      get_jingdu(ndpi,T_value,dxmyb,"ndpi")
+      print("NDPI",ds,"冬小麦",qs,"其他",mjs,"面积(万亩)")
+      T_value=0.063
+      get_jingdu(ndvi,T_value,dxmyb,"ndvi")
+      print("NDVI",ds,"冬小麦",qs,"其他",mjs,"面积(万亩)")
+
+    break;
+    
+    
+  case "510":
+    print("510")
+     ndvi=ndvi510.clip(minhe)
+     ndgi=ndgi510.clip(minhe)
+     ndpi=ndpi510.clip(minhe)
+     addDTWImage()
+  T_value=0.054
+  get_jingdu(ndgi,T_value,dxmyb,"ndgi")
+  print("NDGI",ds,"冬小麦",qs,"其他",mjs,"面积(万亩)")
+  T_value=0.052
+  get_jingdu(ndpi,T_value,dxmyb,"ndpi")
+  print("NDPI",ds,"冬小麦",qs,"其他",mjs,"面积(万亩)")
+  T_value=0.061
+  get_jingdu(ndvi,T_value,dxmyb,"ndvi")
+  print("NDVI",ds,"冬小麦",qs,"其他",mjs,"面积(万亩)")
+    break;
+    
+    
+}
+
+
+function addDTWImage(){
+Map.addLayer(ndgi,{min:0,max:0.2,palette: ['#1fc413','#13e023','#e3ff8d','#fcff4d','#ff5c1d']},"NDGI_DTW",false)
+Map.addLayer(ndpi,{min:0,max:0.2,palette: ['#1fc413','#13e023','#e3ff8d','#fcff4d','#ff5c1d']},"NDPI_DTW",false)
+Map.addLayer(ndvi,{min:0,max:0.2,palette: ['#1fc413','#13e023','#e3ff8d','#fcff4d','#ff5c1d']},"NDVI_DTW",false)
+
+}
+
+
+function get_jingdu(DTW,T,yz,name){
+  T=ee.Image(T)
+  var xiaomai=DTW.where(DTW.gt(T),0).where(DTW.lte(T),1).multiply(geng_di).rename("xiaomai")  
+//  Export.image.toDrive({image:xiaomai, description:name+"_xiaomai", folder:"新实验", fileNamePrefix:name+"_xiaomai", region:minhe, scale:10, maxPixels:1e13 })
+  Map.addLayer(xiaomai,{ palette: ['#fff4f3', '#1dff0e']},name +"小麦")
+  ///导出结果
+//   Export.image.toDrive({image:xiaomai,
+// description:name+"_xiaomai",
+// folder:"IMAGE",
+// fileNamePrefix:name+"_xiaomai",
+// region:minhe,
+// scale:10, 
+// maxPixels:1e13})
+
+  
+   var mj=xiaomai.reduceRegion({
+  reducer: ee.Reducer.sum(),
+  geometry: minhe,
+  scale: 10,
+  maxPixels: 1e13
+});
+  mj=ee.Number(mj.get("xiaomai")).multiply(100).multiply(0.0015).multiply(0.0001)
+  var x = ee.ImageCollection(xiaomai).getRegion(yz, 10); 
+  x=ee.List(x).slice(1,31)
+  var tp=[]
+  for(var i=0;i<30;i++){tp.push(ee.List(x.get(i)).get(4))}
+  tp=ee.List(tp)
+  tp=tp.reduce(ee.Reducer.sum())
+  tp=ee.Number(tp)
+  x = ee.ImageCollection(xiaomai).getRegion(qtyb, 10); 
+    x=ee.List(x).slice(1,31)
+    var fp=[]
+    for(var i=0;i<10;i++){
+      fp.push(ee.List(x.get(i)).get(4))
+    }
+    fp=ee.List(fp)
+    fp=fp.reduce(ee.Reducer.sum())
+    fp=ee.Number(fp)
+    ds=tp
+    qs=fp
+    mjs=mj
+  
+}
+
+
+
+
+
