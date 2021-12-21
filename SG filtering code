@@ -1,0 +1,104 @@
+//https://code.earthengine.google.com/d4f64406e38973b6baa6a302d6fd8a64
+
+var ndvi = ee.Image("users/103b6051/VI/ndvi_20190826_20200730_34"),
+    ndpi = ee.Image("users/103b6051/VI/ndpi_20190826_20200730_34"),
+    ndgi = ee.Image("users/103b6051/VI/ndgi_20190826_20200730_34"),
+    bianjie = ee.FeatureCollection("users/103b6051/minhe_2019_shnag_chuan");
+ 
+  
+function get_sg_list(lists,i){
+var  list=[]
+  list.push(lists.get(i-2))
+  list.push(lists.get(i-1))
+  list.push(lists.get(i))
+  list.push(lists.get(i+1))
+  list.push(lists.get(i+2))
+  return ee.List(list)
+}
+
+//SG滤波函数。仅能进行三次五点拟合，每次只计算窗口最中间的值
+function SG_Value(image_window_list){
+  var xishu=ee.Image(0.0285714285714286)     //35分之一 
+  var y1= ee.Image(image_window_list.get(0)).multiply(ee.Image(-3))
+  var y2= ee.Image(image_window_list.get(1)).multiply(ee.Image(12))
+  var y3= ee.Image(image_window_list.get(2)).multiply(ee.Image(17))
+  var y4= ee.Image(image_window_list.get(3)).multiply(ee.Image(12))
+  var y5= ee.Image(image_window_list.get(4)).multiply(ee.Image(-3))
+  return xishu.multiply(y1.add(y2).add(y3).add(y4).add(y5))
+}
+//python测试结果-0.3714285714285714 
+// var y=[1,-1,1,-1,1]
+// var sg=SG_Value(ee.ImageCollection(y).toList(10))
+// Map.addLayer(sg)
+
+//获取列表  
+//ndpi
+var ndpis=[]
+ndpis.push(ndpi.select("ndpi"))
+for(var i=1;i<34;i++){
+  ndpis.push(ndpi.select("ndpi_"+i))
+}
+ndpis=ee.List(ndpis)
+//ndvi
+var ndvis=[]
+ndvis.push(ndvi.select("ndvi"))
+for(var i=1;i<34;i++){
+  ndvis.push(ndvi.select("ndvi_"+i))
+}
+ndvis=ee.List(ndvis)
+
+var ndgis=[]
+ndgis.push(ndgi.select("ndgi"))
+for(var i=1;i<34;i++){
+  ndgis.push(ndgi.select("ndgi_"+i))
+}
+ndgis=ee.List(ndgis)
+
+
+var sg_ndvi=[]
+var sg_ndpi=[]
+var sg_ndgi=[]
+var get_list  //获取拟合波段 
+var sg_band   //SG滤波波段值 
+for(var i=2;i<32;i++){
+   get_list=get_sg_list(ndpis,i)
+   sg_band=SG_Value(get_list).rename("sg_ndpi")
+  sg_ndpi.push(sg_band)
+  
+   get_list=get_sg_list(ndvis,i)
+   sg_band=SG_Value(get_list).rename("sg_ndvi")
+   sg_ndvi.push(sg_band)
+   
+   get_list=get_sg_list(ndgis,i)
+   sg_band=SG_Value(get_list).rename("sg_ndgi")
+   sg_ndgi.push(sg_band)
+   
+}
+
+sg_ndvi=ee.Image(sg_ndvi)
+sg_ndpi=ee.Image(sg_ndpi)
+sg_ndgi=ee.Image(sg_ndgi)
+
+print("SG_ndvi",sg_ndvi)
+print("SG_ndpi",sg_ndpi)
+print("SG_ndgi",sg_ndgi)
+
+Map.addLayer(sg_ndvi,null,"ndvis_sg")
+Map.addLayer(sg_ndpi,null,"ndpis_sg")
+Map.addLayer(sg_ndgi,null,"ndgis_sg")
+
+// // //保存SG滤波文件 
+
+              
+Export.image.toAsset({image:sg_ndvi,description:"SG_NDVI_Time_Series",  assetId:"sg_ndvi_20190915_20200710_30", 
+region:bianjie, scale:10,maxPixels:1e13
+})
+
+Export.image.toAsset({image:sg_ndpi,description:"SG_NDPI_Time_Series",   assetId:"sg_ndpi_20190915_20200710_30", 
+region:bianjie, scale:10,maxPixels:1e13
+})
+
+Export.image.toAsset({image:sg_ndgi,description:"SG_NDGI_Time_Series",  assetId:"sg_ndgi_20190915_20200710_30", 
+region:bianjie, scale:10,maxPixels:1e13
+})
+
